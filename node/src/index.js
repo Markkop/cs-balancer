@@ -2,13 +2,7 @@
  * @typedef CustomerSuccess
  * @property {number} id
  * @property {number} score
- */
-
-/**
- * @typedef CustomerSuccessWithCustomers
- * @property {number} id
- * @property {number} score
- * @property {Customer[]} customers
+ * @property {Customer[]} [customers]
  */
 
 /**
@@ -18,23 +12,35 @@
  */
 
 /**
- * A High Order Function to check if the customer has a matching score
- * against a Customer Success and if it haven't been matched yet.
+ * Match Customer and CS by score.
+ *
+ * @param {Customer} customer
+ * @param {CustomerSuccess} cs
+ * @returns {boolean}
+ */
+function matchScore (customer, cs) {
+  return customer.score <= cs.score
+}
+
+/**
+ * Push a customer to a CS object.
+ *
+ * @param {Customer} customer
+ * @param {CustomerSuccess} cs
+ * @returns {number}
+ */
+function addCustomerToCs (customer, cs) {
+  return cs.customers.push(customer)
+}
+
+/**
+ * Get the number of customers of a given CS.
  *
  * @param {CustomerSuccess} cs
- * @param {Customer[]} alreadyMatchedCustomers
- * @returns {(customer:Customer) => boolean}
+ * @returns {number}
  */
-function isMatchingCustomer (cs, alreadyMatchedCustomers) {
-  return customer => {
-    const hasMatchingScore = customer.score <= cs.score
-    const isAlreadyMatched = alreadyMatchedCustomers.includes(customer.id)
-    const isMatched = !isAlreadyMatched && hasMatchingScore
-    if (isMatched) {
-      alreadyMatchedCustomers.push(customer.id)
-    }
-    return isMatched
-  }
+function getCustomersNumber (cs) {
+  return cs.customers.length
 }
 
 /**
@@ -48,27 +54,49 @@ function isMatchingCustomer (cs, alreadyMatchedCustomers) {
  */
 export default function CustomerSuccessBalancing (css, customers, cssAway) {
   const cssOrderedByScore = [...css].sort((a, b) => a.score - b.score)
+  const customersOrderedByScore = [...customers].sort((a, b) => a.score - b.score)
 
   const cssAvailable = cssOrderedByScore.filter(cs => {
     return !cssAway.some(csAway => cs.id === csAway)
   })
 
-  const alreadyMatchedCustomers = []
   const cssWithCustomers = cssAvailable.map(cs => {
-    const csCustomers = customers.filter(isMatchingCustomer(cs, alreadyMatchedCustomers))
-    cs.customers = csCustomers
+    cs.customers = []
     return cs
   })
 
+  let csIndex = 0
+  customersOrderedByScore.forEach(customer => {
+    let cs = cssWithCustomers[csIndex]
+    let isMatched = matchScore(customer, cs)
+
+    if (isMatched) {
+      addCustomerToCs(customer, cs)
+      return
+    }
+
+    while (!isMatched) {
+      const isLastCs = cssWithCustomers[cssWithCustomers.length - 1] === cs
+      if (isLastCs) {
+        break
+      }
+
+      csIndex += 1
+      cs = cssWithCustomers[csIndex]
+      isMatched = matchScore(customer, cs)
+      if (isMatched) addCustomerToCs(customer, cs)
+    }
+  })
+
   const csWithMostCustomers = cssWithCustomers.reduce((overloadedCs, cs) => {
-    const currentCustomersLength = cs.customers.length
-    const overloadedCustomersLength = overloadedCs.customers.length
+    const currentCustomersLength = getCustomersNumber(cs)
+    const overloadedCustomersLength = getCustomersNumber(overloadedCs)
     return currentCustomersLength > overloadedCustomersLength ? cs : overloadedCs
   }, cssWithCustomers[0])
 
   const hasTwoOrMoreCssSharingTheSameFate = cssWithCustomers.some(({ id, customers }) => {
     const isSameCs = id === csWithMostCustomers.id
-    const hasSameNumberOfCustomers = csWithMostCustomers.customers.length === customers.length
+    const hasSameNumberOfCustomers = getCustomersNumber(csWithMostCustomers) === customers.length
     return !isSameCs && hasSameNumberOfCustomers
   })
 

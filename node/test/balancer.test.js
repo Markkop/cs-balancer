@@ -63,7 +63,10 @@ describe('CustomerSuccessBalancing', () => {
     expect(balancer).toEqual(999)
 
     const milisecondsSinceStart = new Date() - startTime
-    expect(milisecondsSinceStart).toBeLessThan(1000)
+
+    // On my computer, the O(nxm) algorithm took 300ms, so I've
+    // made this test pass with less than 100ms for the Node Version
+    expect(milisecondsSinceStart).toBeLessThan(100)
   })
 
   it('Test Scenario Four', () => {
@@ -93,6 +96,13 @@ describe('CustomerSuccessBalancing', () => {
     const customers = mapScoresToEntities([10, 10, 10, 20, 20, 30, 30, 30, 20, 60])
     const cssAway = [4, 5, 6]
     const balancer = CustomerSuccessBalancing(css, customers, cssAway)
+    expect(balancer).toEqual(3)
+  })
+
+  it('Test Scenario Eigth', () => {
+    const css = mapScoresToEntities([2, 5, 6, 7])
+    const customers = mapScoresToEntities([6])
+    const balancer = CustomerSuccessBalancing(css, customers, [])
     expect(balancer).toEqual(3)
   })
 })
