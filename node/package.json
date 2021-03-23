@@ -1,0 +1,38 @@
+{
+  "name": "cs-balancing",
+  "version": "1.0.0",
+  "description": "A balance finder between Customer Success collaborators and their customers",
+  "main": "index.js",
+  "scripts": {
+    "start": "index.js",
+    "test": "jest test/balancer.test.js",
+    "test:watch": "jest test/balancer.test.js --watch",
+    "clean": "rm package-lock.json && rm -rf node_modules"
+  },
+  "author": "Mark Kop",
+  "license": "ISC",
+  "dependencies": {
+    "@babel/runtime": "^7.11.2"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.11.5",
+    "@babel/core": "^7.11.5",
+    "@babel/node": "^7.10.5",
+    "@babel/plugin-transform-runtime": "^7.11.5",
+    "@babel/preset-env": "^7.11.5",
+    "@types/jest": "^26.0.13",
+    "babel-jest": "^26.3.0",
+    "eslint": "^7.8.1",
+    "eslint-config-standard": "^14.1.1",
+    "eslint-config-standard-jsdoc": "^9.3.0",
+    "eslint-plugin-import": "^2.22.0",
+    "eslint-plugin-jsdoc": "^30.3.1",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.1",
+    "jest": "^26.4.2"
+  },
+  "jest": {
+    "testEnvironment": "node"
+  }
+}
