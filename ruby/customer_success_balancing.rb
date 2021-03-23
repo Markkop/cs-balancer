@@ -13,7 +13,9 @@ class CustomerSuccessBalancing
     css_ordered_by_score = @customer_success.sort { |a,b| a[:score] <=> b[:score] }
 
     already_matched_customers = []
-    css_with_customers = css_ordered_by_score.reduce([]) do |css, cs| 
+    css_with_customers = css_ordered_by_score.reduce([]) do |css, cs|
+      next css if cs[:score] <= 0
+      
       is_cs_available = @customer_success_away.none? { |cs_away| cs[:id] == cs_away }
       next css if !is_cs_available
       
