@@ -56,16 +56,14 @@ describe('CustomerSuccessBalancing', () => {
     csScores[998] = 100
     const customersScores = Array(10000).fill(10)
 
-    const result = await new Promise((resolve) => {
-      setTimeout(() => {
-        const css = mapScoresToEntities(csScores)
-        const customers = mapScoresToEntities(customersScores)
-        const balancer = CustomerSuccessBalancing(css, customers, [1000])
-        resolve(balancer)
-      }, 1000)
-    }
-    )
-    expect(result).toEqual(999)
+    const startTime = new Date()
+    const css = mapScoresToEntities(csScores)
+    const customers = mapScoresToEntities(customersScores)
+    const balancer = CustomerSuccessBalancing(css, customers, [1000])
+    expect(balancer).toEqual(999)
+
+    const milisecondsSinceStart = new Date() - startTime
+    expect(milisecondsSinceStart).toBeLessThan(1000)
   })
 
   it('Test Scenario Four', () => {
