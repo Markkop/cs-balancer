@@ -10,7 +10,14 @@ class CustomerSuccessBalancing
 
   # Returns the id of the CustomerSuccess with the most customers
   def execute
-    # Write your solution here
+    css_ordered_by_score = @customer_success.sort { |a,b| a[:score] <=> b[:score] }
+
+    # Trying
+    css_available = css_ordered_by_score.select { |cs| 
+      @customer_success_away.select { |cs_away|
+        
+      } 
+    }  
     nil
   end
 end
