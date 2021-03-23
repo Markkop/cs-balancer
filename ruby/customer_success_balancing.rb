@@ -18,6 +18,11 @@ class CustomerSuccessBalancing
     cs[:customers].push(customer) 
   end
 
+  # Get the number of customers of a given CS
+  def get_customers_number(cs)
+    cs[:customers].length
+  end
+
   # Returns the id of the CustomerSuccess with the most customers
   def execute
     css_ordered_by_score = @customer_success.sort { |a,b| a[:score] <=> b[:score] }
@@ -59,14 +64,12 @@ class CustomerSuccessBalancing
     end
 
     css_with_most_customers = css_with_customers.reduce(css_with_customers[0]) do |overloaded_cs, cs|
-      current_customers_length = cs[:customers].length
-      overloaded_customers_length = overloaded_cs[:customers].length
-      current_customers_length > overloaded_customers_length ? cs : overloaded_cs
+      get_customers_number(cs) > get_customers_number(overloaded_cs) ? cs : overloaded_cs
     end
     
     is_there_two_css_sharing_same_fate = css_with_customers.any? do |cs|
       is_same_cs = cs[:id] == css_with_most_customers[:id]
-      has_same_customers_number = cs[:customers].length == css_with_most_customers[:customers].length
+      has_same_customers_number = get_customers_number(cs) == get_customers_number(css_with_most_customers)
       !is_same_cs && has_same_customers_number
     end
     
