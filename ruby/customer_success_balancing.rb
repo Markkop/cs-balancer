@@ -12,13 +12,13 @@ class CustomerSuccessBalancing
   def execute
     css_ordered_by_score = @customer_success.sort { |a,b| a[:score] <=> b[:score] }
 
-    # Trying
-    css_available = css_ordered_by_score.select { |cs| 
-      @customer_success_away.select { |cs_away|
-        
+    css_available = css_ordered_by_score.reject { |cs|
+      @customer_success_away.any? { |cs_away| cs[:id] == cs_away } 
+    }  
       } 
     }  
-    nil
+
+    css_available
   end
 end
 
