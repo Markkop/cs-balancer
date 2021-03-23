@@ -8,28 +8,54 @@ class CustomerSuccessBalancing
     @customer_success_away = customer_success_away
   end
 
+  # Matches Customer and CS by score
+  def match_score(customer, cs)
+    customer[:score] <= cs[:score]
+  end
+
+  # Push a customer to a CS hash
+  def add_customer_to_cs(customer, cs)
+    cs[:customers].push(customer) 
+  end
+
   # Returns the id of the CustomerSuccess with the most customers
   def execute
     css_ordered_by_score = @customer_success.sort { |a,b| a[:score] <=> b[:score] }
+    customers_ordered_by_score = @customers.sort { |a,b| a[:score] <=> b[:score] }
 
-    already_matched_customers = []
-    css_with_customers = css_ordered_by_score.reduce([]) do |css, cs|
-      next css if cs[:score] <= 0
+    css_available = css_ordered_by_score.reject do |cs|
+      @customer_success_away.any? { |cs_away| cs[:id] == cs_away } 
+    end 
+
+    css_with_customers = css_available.map do |cs|
+      cs[:customers] = []
+      cs
+    end
+        
+    cs_index = 0
+    customers_ordered_by_score.each do |customer|
+      cs = css_with_customers[cs_index]
+      is_matched = match_score(customer, cs)
       
-      is_cs_available = @customer_success_away.none? { |cs_away| cs[:id] == cs_away }
-      next css if !is_cs_available
-      
-      cs_customers = @customers.select do |customer|
-        has_matching_score = customer[:score] <= cs[:score]
-        is_already_matched = already_matched_customers.include?(customer[:id])
-        is_matched = !is_already_matched && has_matching_score
-        if is_matched
-          already_matched_customers.push(customer[:id])
-        end
-        is_matched
+      if is_matched
+        add_customer_to_cs(customer, cs)
+        next 
       end
-      cs[:customers] = cs_customers
-      css.push(cs)
+
+      while !is_matched
+        is_last_cs = css_with_customers.last == cs
+        if is_last_cs
+          # The following line could be uncommented so the last CS (with the highest score)
+          # gets the customers that were unmatched
+          # add_customer_to_cs(customer, cs)
+          break
+        end
+
+        cs_index += 1
+        cs = css_with_customers[cs_index]
+        is_matched = match_score(customer, cs)
+        add_customer_to_cs(customer, cs) if is_matched
+      end
     end
 
     css_with_most_customers = css_with_customers.reduce(css_with_customers[0]) do |overloaded_cs, cs|
@@ -37,7 +63,6 @@ class CustomerSuccessBalancing
       overloaded_customers_length = overloaded_cs[:customers].length
       current_customers_length > overloaded_customers_length ? cs : overloaded_cs
     end
-    
     
     is_there_two_css_sharing_same_fate = css_with_customers.any? do |cs|
       is_same_cs = cs[:id] == css_with_most_customers[:id]
@@ -94,6 +119,11 @@ class CustomerSuccessBalancingTests < Minitest::Test
 
   def test_scenario_seven
     balancer = CustomerSuccessBalancing.new(array_to_map([100, 99, 88, 3, 4, 5]), array_to_map([10, 10, 10, 20, 20, 30, 30, 30, 20, 60]), [4, 5, 6])
+    assert_equal balancer.execute, 3
+  end
+
+  def test_scenario_eight
+    balancer = CustomerSuccessBalancing.new(array_to_map([2,5,6,7]), array_to_map([6]), [])
     assert_equal balancer.execute, 3
   end
 
