@@ -11,12 +11,12 @@ class CustomerSuccessBalancing
   # Returns the id of the CustomerSuccess with the most customers
   def execute
     css_ordered_by_score = @customer_success.sort { |a,b| a[:score] <=> b[:score] }
-    css_available = css_ordered_by_score.reject { |cs|
-      @customer_success_away.any? { |cs_away| cs[:id] == cs_away } 
-    }  
 
     already_matched_customers = []
-    css_with_customers = css_available.map do |cs| 
+    css_with_customers = css_ordered_by_score.reduce([]) do |css, cs| 
+      is_cs_available = @customer_success_away.none? { |cs_away| cs[:id] == cs_away }
+      next css if !is_cs_available
+      
       cs_customers = @customers.select do |customer|
         has_matching_score = customer[:score] <= cs[:score]
         is_already_matched = already_matched_customers.include?(customer[:id])
@@ -27,7 +27,7 @@ class CustomerSuccessBalancing
         is_matched
       end
       cs[:customers] = cs_customers
-      cs
+      css.push(cs)
     end
 
     css_with_most_customers = css_with_customers.reduce(css_with_customers[0]) do |overloaded_cs, cs|
@@ -35,6 +35,7 @@ class CustomerSuccessBalancing
       overloaded_customers_length = overloaded_cs[:customers].length
       current_customers_length > overloaded_customers_length ? cs : overloaded_cs
     end
+    
     
     is_there_two_css_sharing_same_fate = css_with_customers.any? do |cs|
       is_same_cs = cs[:id] == css_with_most_customers[:id]
